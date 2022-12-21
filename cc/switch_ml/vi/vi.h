@@ -34,6 +34,9 @@
 #include <cstdlib>
 #include <cmath>
 
+#include <sstream>
+#include <fstream>
+
 template <typename T>
 void print_vector(std::string name, std::vector<T> v) {
   std::cout << name << ": ";
@@ -73,6 +76,7 @@ std::vector<std::vector<T1>> add_outer(std::vector<T2> &a, std::vector<T3> &b, f
 
 
 
+
 class UGMM {
 
 public:
@@ -96,6 +100,22 @@ public:
 
 
 
+
+  void SetPhi(std::vector<std::vector<double>> phi);
+
+  void SetM(std::vector<float> m);
+  
+  void SetS2(std::vector<float> s2);
+
+  std::vector<std::vector<double>> GetPhi();
+
+  std::vector<float> GetM();
+
+  std::vector<float> GetS2();
+
+
+
+
 private:
 
   std::vector<float> _X;
@@ -106,7 +126,7 @@ private:
   int _K;
   float _sigma2;
 
-  std::vector<int> _m;
+  std::vector<float> _m;
   std::vector<float> _s2;
 
 

@@ -1,6 +1,11 @@
 #include "vi.h"
 
 
+
+
+
+
+
 UGMM::UGMM(std::vector<float> X, int K, float sigma2) : _X(X), _N(X.size()), _K(K), _sigma2(sigma2) {
   std::cout << "UGMM constructor" << std::endl;
 }
@@ -37,7 +42,7 @@ void UGMM::Init() {
 
   // std::vector<int> m(_K);
   std::uniform_int_distribution<int> distribution_m(min, max);
-  _m = std::vector<int>(_K, distribution_m(rng));
+  _m = std::vector<float>(_K, distribution_m(rng));
   for (int i = 0; i < _K; i++) {
     _m[i] += max * distribution(rng);
   }
@@ -103,7 +108,7 @@ void UGMM::Fit(int max_iter, float tol) {
 
   std::cout << std::endl << "GetELBO" << std::endl << std::endl;
   std::vector<float> elbo_vals = std::vector<float>(1, GetELBO());
-  std::vector<std::vector<int>> m_hist = std::vector<std::vector<int>>(1, _m);
+  std::vector<std::vector<float>> m_hist = std::vector<std::vector<float>>(1, _m);
   std::vector<std::vector<float>> s2_hist = std::vector<std::vector<float>>(1, _s2);
 
   for (int iter = 0; iter < max_iter; iter++) {
@@ -111,13 +116,11 @@ void UGMM::Fit(int max_iter, float tol) {
     Cavi();
     float elbo_new = GetELBO();
 
-    /*
-
     elbo_vals.push_back(elbo_new);
     m_hist.push_back(_m);
     s2_hist.push_back(_s2);
 
-    std::cout << std::endl << "Result" << astd::endl << std::endl;
+    std::cout << std::endl << "Result" << std::endl << std::endl;
 
     if ((iter+1) % 5 == 0) {
         std::cout << "iter: " << iter+1 << std::endl;
@@ -128,7 +131,7 @@ void UGMM::Fit(int max_iter, float tol) {
         std::cout << std::endl;
     }
 
-    if (abs(elbo_new - elbo) < tol) {
+    if (abs(elbo_new - elbo_vals[iter]) < tol) {
         std::cout << "Converged with " << elbo_new << " at iteration " << iter << std::endl;
         break;
     }
@@ -136,8 +139,6 @@ void UGMM::Fit(int max_iter, float tol) {
     if (iter == max_iter - 1) {
         std::cout << "Warning: max_iter reached, elbo " << elbo_new << std::endl;
     }
-
-    */
 
     break;
   }
@@ -190,12 +191,20 @@ void UGMM::UpdatePhi() {
       _phi[i][j] /= sum;
     }
   }
+
+  std::cout << "phi: " << std::endl;
+  for (int i = 0; i < 5; i++) {
+    for (int j = 0; j < _K; j++) {
+      std::cout << _phi[i][j] << " ";
+    }
+    std::cout << std::endl;
+  }
 }
 
 void UGMM::UpdateMu() {
   std::cout << "UGMM UpdateMu" << std::endl;
-  std::vector<std::vector<float>> phi_X = std::vector<std::vector<float>>(_N, std::vector<float>(_K, 0.0));
-  std::vector<float> phi_X_sum = std::vector<float>(_K, 0.0);
+  std::vector<std::vector<double>> phi_X = std::vector<std::vector<double>>(_N, std::vector<double>(_K, 0.0));
+  std::vector<double> phi_X_sum = std::vector<double>(_K, 0.0);
   for (int i = 0; i < _N; i++) {
     for (int j = 0; j < _K; j++) {
       phi_X[i][j] = _phi[i][j] * _X[i];
@@ -203,7 +212,7 @@ void UGMM::UpdateMu() {
     }
   }
   
-  std::vector<float> phi_sum0_1 = std::vector<float>(_K, 0.0);
+  std::vector<double> phi_sum0_1 = std::vector<double>(_K, 0.0);
   for (int i = 0; i < _N; i++) {
     for (int j = 0; j < _K; j++) {
       phi_sum0_1[j] += _phi[i][j];
@@ -211,7 +220,7 @@ void UGMM::UpdateMu() {
   }
 
   for (int i = 0; i < _K; i++) {
-    phi_sum0_1[i] = phi_sum0_1[i] / _sigma2;
+    phi_sum0_1[i] = phi_sum0_1[i] + (1 / _sigma2);
     phi_sum0_1[i] = 1.0 / phi_sum0_1[i];
   }
 
@@ -219,4 +228,47 @@ void UGMM::UpdateMu() {
     _m[i] = phi_X_sum[i] * phi_sum0_1[i];
     _s2[i] = phi_sum0_1[i];
   }
+
+  std::cout << "m: " << std::endl;
+  for (int i = 0; i < _K; i++) {
+    std::cout << _m[i] << " ";
+  }
+  std::cout << std::endl;
+
+  std::cout << "s2: " << std::endl;
+  for (int i = 0; i < _K; i++) {
+    std::cout << _s2[i] << " ";
+  }
+  std::cout << std::endl;
+
 }
+
+
+
+
+
+void UGMM::SetPhi(std::vector<std::vector<double>> phi) {
+  _phi = phi;
+}
+
+void UGMM::SetM(std::vector<float> m) {
+  _m = m;
+}
+
+void UGMM::SetS2(std::vector<float> s2) {
+  _s2 = s2;
+}
+
+std::vector<std::vector<double>> UGMM::GetPhi() {
+  return _phi;
+}
+
+std::vector<float> UGMM::GetM() {
+  return _m;
+}
+
+std::vector<float> UGMM::GetS2() {
+  return _s2;
+}
+
+

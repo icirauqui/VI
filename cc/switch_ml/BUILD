@@ -10,6 +10,9 @@ cc_library(
     hdrs = ["vi/vi_agent.h"],
     srcs = ["vi/vi_agent.cpp"],
     linkstatic=True,
+    deps = [
+        "@gsl//:gsl",
+    ],
     visibility = ["//visibility:public"],
 )
 

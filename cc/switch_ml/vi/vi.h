@@ -8,7 +8,7 @@
 
 // Dirichlet distribution
 //#include <gls/gls_rng.h>
-#include <gsl/gsl_linalg.h>
+//#include <gsl/gsl_linalg.h>
 // GLS Dirichlet
 //#include <gls/gls_dirichlet.h>
 #include <gsl/gsl_rng.h>
@@ -81,7 +81,7 @@ class UGMM {
 
 public:
 
-  UGMM(std::vector<float> X, int K, float sigma2);
+  UGMM(std::vector<double> X, int K, float sigma2);
 
   ~UGMM();
 
@@ -99,26 +99,28 @@ public:
 
 
 
-
+  void SetX(std::vector<double> X);
 
   void SetPhi(std::vector<std::vector<double>> phi);
 
-  void SetM(std::vector<float> m);
+  void SetM(std::vector<double> m);
   
-  void SetS2(std::vector<float> s2);
+  void SetS2(std::vector<double> s2);
+
+  std::vector<double> GetX();
 
   std::vector<std::vector<double>> GetPhi();
 
-  std::vector<float> GetM();
+  std::vector<double> GetM();
 
-  std::vector<float> GetS2();
+  std::vector<double> GetS2();
 
 
 
 
 private:
 
-  std::vector<float> _X;
+  std::vector<double> _X;
 
   std::vector<std::vector<double>> _phi;
   
@@ -126,8 +128,8 @@ private:
   int _K;
   float _sigma2;
 
-  std::vector<float> _m;
-  std::vector<float> _s2;
+  std::vector<double> _m;
+  std::vector<double> _s2;
 
 
 

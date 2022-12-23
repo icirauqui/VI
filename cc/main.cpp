@@ -7,6 +7,8 @@
 #include "cc/switch_ml/vi/vi_agent.h"
 #include "cc/switch_ml/vi/vi.h"
 
+#include <chrono>
+
 template <typename T>
 std::vector<T> slicing(std::vector<T>& arr, int X, int Y) {
  
@@ -64,20 +66,20 @@ int write_to_file(std::vector<float> X, std::string filename) {
 }
 
 
-std::vector<std::vector<float>> ReadCSV(std::string path, char delimiter = ';') {
+std::vector<std::vector<double>> ReadCSV(std::string path, char delimiter = ';') {
   std::ifstream file(path);
-  std::vector<std::vector<float>> dataList;
+  std::vector<std::vector<double>> dataList;
 
   std::string line = "";
   // Iterate through each line and split the content using delimeter
   while (getline(file, line)) {
-    std::vector<float> vec;
+    std::vector<double> vec;
     std::stringstream ss(line);
     std::string cell;
 
     while (getline(ss, cell, delimiter)) {
       std::replace( cell.begin(), cell.end(), ',', '.'); 
-      vec.push_back(std::stof(cell));
+      vec.push_back(std::stod(cell));
     }
     dataList.push_back(vec);
   }
@@ -99,8 +101,8 @@ std::vector<std::vector<double>> vector_float_to_double(std::vector<std::vector<
   return result;
 }
 
-std::vector<float> vector_2d_to_1d(std::vector<std::vector<float>> X) {
-  std::vector<float> result;
+std::vector<double> vector_2d_to_1d(std::vector<std::vector<double>> X) {
+  std::vector<double> result;
   for (unsigned int i=0; i<X.size(); i++) {
     for (unsigned int j=0; j<X[i].size(); j++) {
       result.push_back(X[i][j]);
@@ -110,7 +112,7 @@ std::vector<float> vector_2d_to_1d(std::vector<std::vector<float>> X) {
 }
 
 
-void print_vec_1d(std::string name, std::vector<std::vector<float>> v) {
+void print_vec_1d(std::string name, std::vector<std::vector<double>> v) {
   std::cout << std::endl;
   std::cout << name << " [" << v.size() << "][" << v[0].size() << "]" << std::endl;
   for (unsigned int i=0; i<v.size(); i++) {
@@ -121,7 +123,7 @@ void print_vec_1d(std::string name, std::vector<std::vector<float>> v) {
   std::cout << std::endl;
 }
 
-void print_vec_2d(std::string name, std::vector<std::vector<float>> v, unsigned int limit = 5) {
+void print_vec_2d(std::string name, std::vector<std::vector<double>> v, unsigned int limit = 5) {
   std::cout << std::endl;
   std::cout << name << " [" << v.size() << "][" << v[0].size() << "]" << std::endl;
   for (unsigned int i=0; i<limit; i++) {
@@ -142,10 +144,10 @@ void print_separator() {
 int main() {
     
   // Read data
-  std::vector<std::vector<float>> m   = ReadCSV("/home/icirauqui/w4rkspace/VI/data/m.csv");
-  std::vector<std::vector<float>> phi = ReadCSV("/home/icirauqui/w4rkspace/VI/data/phi.csv");
-  std::vector<std::vector<float>> s2  = ReadCSV("/home/icirauqui/w4rkspace/VI/data/s2.csv");
-  std::vector<std::vector<float>> X   = ReadCSV("/home/icirauqui/w4rkspace/VI/data/X.csv");
+  std::vector<std::vector<double>> m   = ReadCSV("/home/icirauqui/w4rkspace/VI/data/m.csv");
+  std::vector<std::vector<double>> phi = ReadCSV("/home/icirauqui/w4rkspace/VI/data/phi.csv");
+  std::vector<std::vector<double>> s2  = ReadCSV("/home/icirauqui/w4rkspace/VI/data/s2.csv");
+  std::vector<std::vector<double>> X   = ReadCSV("/home/icirauqui/w4rkspace/VI/data/X.csv");
 
   print_vec_1d("m", m);
   print_vec_2d("phi", phi);
@@ -155,31 +157,35 @@ int main() {
 
   // Convert to double
   //std::vector<std::vector<double>> m_double   = vector_float_to_double(load_m);
-  std::vector<std::vector<double>> phi_double = vector_float_to_double(phi);
+  //std::vector<std::vector<double>> phi_double = vector_float_to_double(phi);
   //std::vector<std::vector<double>> s2_double  = vector_float_to_double(load_s2);
   //std::vector<std::vector<double>> X_double   = vector_float_to_double(load_X);
 
-  std::vector<float> m_1d = vector_2d_to_1d(m);
+  std::vector<double> m_1d = vector_2d_to_1d(m);
   //std::vector<float> phi_1d = vector_2d_to_1d(m);
-  std::vector<float> X_1d = vector_2d_to_1d(X);
-  std::vector<float> s2_1d = vector_2d_to_1d(s2);
+  std::vector<double> X_1d = vector_2d_to_1d(X);
+  std::vector<double> s2_1d = vector_2d_to_1d(s2);
 
   print_separator();
+
+  auto start1 = std::chrono::high_resolution_clock::now();
 
   int K = 3;
   UGMM ugmm(X_1d, K, 1.0);
   ugmm.Init();
 
   // Set simulation values from Python
-  ugmm.SetPhi(phi_double);
+  ugmm.SetPhi(phi);
   ugmm.SetS2(s2_1d);
   ugmm.SetM(m_1d);
 
   
+  /*
+
   //Get vectors
-  std::vector<std::vector<double>> get_phi = ugmm.GetPhi();
-  std::vector<float> get_m                 = ugmm.GetM();
-  std::vector<float> get_s2                = ugmm.GetS2();
+  std::vector<std::vector<double>> get_phi  = ugmm.GetPhi();
+  std::vector<double> get_m                 = ugmm.GetM();
+  std::vector<double> get_s2                = ugmm.GetS2();
 
   //Compare put and get values
   std::cout << std::endl;
@@ -204,15 +210,41 @@ int main() {
     }
     std::cout << std::endl;
   }
+
+  */
   
 
 
   print_separator();
 
-  ugmm.Fit(1);
+
+
+  auto start12 = std::chrono::high_resolution_clock::now();
+
+  ugmm.Fit();
+
+  auto stop1 = std::chrono::high_resolution_clock::now();
+  auto duration1 = std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1);
+
+  auto duration12 = std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start12);
+
+  double elbo = ugmm.GetELBO();
+  std::cout << std::endl << std::endl << "Final ELBO = " << elbo << std::endl;
 
   print_separator();
 
+  auto start2 = std::chrono::high_resolution_clock::now();
+  vi::Fit(phi, s2_1d, m_1d,
+          X_1d, K, 1.0);
+  auto stop2 = std::chrono::high_resolution_clock::now();
+  auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(stop2 - start2);
+
+  print_separator();
+
+  std::cout << std::endl << std::endl;
+  std::cout << "Time 1   = " << duration1.count() << " microseconds" << std::endl;
+  std::cout << "Time 1.2 = " << duration12.count() << " microseconds" << std::endl;
+  std::cout << "Time 2   = " << duration2.count() << " microseconds" << std::endl;
 
 
   //ugmm.Fit();
